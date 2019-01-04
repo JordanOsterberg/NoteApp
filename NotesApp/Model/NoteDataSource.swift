@@ -7,17 +7,23 @@
 //
 
 import Foundation
+import RealmSwift
 
 class NoteDataSource: DataSource {
     
     var notes: [Note] {
-        return [
-            Note(content: "Apple Park Visit\n\nRemember to pack food for the long road trip!\n\nWe will need...\n\n- Protein Bars\n- Plently of Water\n- Apples\n\nAddress is 1 Apple Park Way")
-        ]
+        let objects = realm.objects(RealmNote.self).sorted(byKeyPath: "lastEdited", ascending: false)
+        
+        return objects.map {
+            return $0.note
+        }
     }
+    
+    var realm: Realm
     
     init() {
         // Load our data
+        self.realm = try! Realm()
     }
     
     func store<T>(object: T) {
@@ -26,6 +32,9 @@ class NoteDataSource: DataSource {
         }
         
         // Save our note
+        try? self.realm.write {
+            self.realm.add(note.realmNote, update: true)
+        }
         
         NotificationCenter.default.post(name: .noteDataChanged, object: nil)
     }
@@ -36,6 +45,11 @@ class NoteDataSource: DataSource {
         }
         
         // Delete our note
+        if let realmNote = self.realm.object(ofType: RealmNote.self, forPrimaryKey: note.identifier) {
+            self.realm.beginWrite()
+            self.realm.delete(realmNote)
+            try? self.realm.commitWrite()
+        }
         
         NotificationCenter.default.post(name: .noteDataChanged, object: nil)
     }

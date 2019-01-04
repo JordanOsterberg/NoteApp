@@ -25,6 +25,18 @@ class Note {
     
 }
 
+extension Note {
+    
+    convenience init(realmNote: RealmNote) {
+        self.init(identifier: realmNote.identifier, content: realmNote.content, lastEdited: realmNote.lastEdited)
+    }
+    
+    var realmNote: RealmNote {
+        return RealmNote(note: self)
+    }
+    
+}
+
 extension Note: Writable {
     
     func write(dataSource: DataSource) {
